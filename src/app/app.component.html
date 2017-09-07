@@ -1,13 +1,19 @@
 <div class="example-container mat-elevation-z8">
 
-  <md-table #table [dataSource]="dataSource">
+  <div class="example-header">
+    <md-form-field floatPlaceholder="never">
+      <input mdInput #filter placeholder="Filter users">
+    </md-form-field>
+  </div>
+
+  <md-table #table [dataSource]="dataSource" mdSort>
 
     <!--- Note that these columns can be defined in any order.
           The actual rendered columns are set as a property on the row definition" -->
 
     <!-- ID Column -->
     <ng-container mdColumnDef="number">
-      <md-header-cell *mdHeaderCellDef> number </md-header-cell>
+      <md-header-cell *mdHeaderCellDef md-sort-header> number </md-header-cell>
       <md-cell *mdCellDef="let row"> {{row.number}} </md-cell>
     </ng-container>
 

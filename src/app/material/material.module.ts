@@ -1,18 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MdButtonModule, MdCheckboxModule, MdTableModule, MdPaginatorModule } from '@angular/material';
+import { MdButtonModule, MdCheckboxModule, MdTableModule, MdPaginatorModule, MdSortModule } from '@angular/material';
 
 @NgModule({
   imports: [
     CommonModule,
     MdButtonModule, 
-    MdCheckboxModule
+    MdCheckboxModule,
+    MdSortModule
   ],
   exports: [
     MdButtonModule, 
     MdCheckboxModule,
     MdTableModule,
-    MdPaginatorModule
+    MdPaginatorModule,
+    MdSortModule
   ],
   declarations: []
 })
