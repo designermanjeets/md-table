@@ -21,7 +21,7 @@ import 'rxjs/add/observable/fromEvent';
 
 export class AppComponent {
 
-  selectedValue: string;
+  selectedValueTitle; selectedValueState: String;
 
   States = [
     {value: 'Open', viewValue: 'Open'},
@@ -38,7 +38,6 @@ export class AppComponent {
   dataSource: ExampleDataSource | null;
 
   dropdata = [];
-  Observer:any
   
   @ViewChild(MdPaginator) paginator: MdPaginator;
   @ViewChild('filter') filterInput: ElementRef;
@@ -67,6 +66,11 @@ export class AppComponent {
   mostrardatos($ele){
     this.dataSource._filterChange.next($ele.value)
     this.dataSource.allData.next($ele.source.ariaLabel);
+    if($ele.source.ariaLabel=='state'){
+      this.selectedValueTitle = '';
+    } else {
+      this.selectedValueState = '';
+    }
   }
 }
 
@@ -78,7 +82,7 @@ export interface MyGithubIssue {
 
 /** An example database that the data source uses to retrieve data for the table. */
 export class ExampleHttpDatabase {
-  
+
   private issuesUrl = 'http://localhost:4200/assets/data.json';  // URL to web API
 
   getRepoIssues(): Observable<MyGithubIssue[]> {
@@ -147,7 +151,7 @@ export class ExampleDataSource extends DataSource<MyGithubIssue> {
         let searchStr2: String;
 
         this.filteredData  = this._exampleDatabase.data.slice().filter((item: MyGithubIssue) => {
-
+        
         if(searchStr === 'state'){
           searchStr2 = (item.state).toLowerCase();
         } else {
