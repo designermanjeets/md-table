@@ -1,9 +1,23 @@
 <div class="example-container mat-elevation-z8">
 
   <div class="example-header">
-    <md-form-field floatPlaceholder="never">
-      <input mdInput #filter placeholder="Filter users">
-    </md-form-field>
+    <form class="example-form">
+      <md-form-field>
+        <input mdInput #filter placeholder="Filter users">
+      </md-form-field>
+      <md-select #selectstate placeholder="State" [(ngModel)]="selectedValueState" name="myselect" aria-label="state" (change)="mostrardatos($event)">
+        <md-option *ngFor="let State of States" [value]="State.value">
+          {{State.viewValue}}
+        </md-option>
+      </md-select>
+
+      <md-select placeholder="Title" [(ngModel)]="selectedValueTitle" name="myselect2" aria-label="title" (change)="mostrardatos($event)">
+        <md-option *ngFor="let Title of Titles" [value]="Title.value">
+          {{Title.viewValue}}
+        </md-option>
+      </md-select>
+
+    </form>
   </div>
 
   <md-table #table [dataSource]="dataSource" mdSort>
@@ -13,19 +27,19 @@
 
     <!-- ID Column -->
     <ng-container mdColumnDef="number">
-      <md-header-cell *mdHeaderCellDef md-sort-header> number </md-header-cell>
+      <md-header-cell *mdHeaderCellDef md-sort-header> Number </md-header-cell>
       <md-cell *mdCellDef="let row"> {{row.number}} </md-cell>
     </ng-container>
 
     <!-- Progress Column -->
     <ng-container mdColumnDef="title">
-      <md-header-cell *mdHeaderCellDef> title </md-header-cell>
+      <md-header-cell *mdHeaderCellDef> Title </md-header-cell>
       <md-cell *mdCellDef="let row"> {{row.title}} </md-cell>
     </ng-container>
 
     <!-- Name Column -->
     <ng-container mdColumnDef="state">
-      <md-header-cell *mdHeaderCellDef> state </md-header-cell>
+      <md-header-cell *mdHeaderCellDef md-sort-header> State </md-header-cell>
       <md-cell *mdCellDef="let row"> {{row.state}} </md-cell>
     </ng-container>
 

@@ -1,5 +1,5 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import {Http, Response} from '@angular/http';
+import { Component, ElementRef, ViewChild, Output, EventEmitter } from '@angular/core';
+import {Http, Response, HttpModule} from '@angular/http';
 import {DataSource} from '@angular/cdk/collections';
 import {MdPaginator} from '@angular/material';
 import {MdSort} from '@angular/material';
@@ -12,6 +12,7 @@ import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/observable/fromEvent';
 
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -20,30 +21,53 @@ import 'rxjs/add/observable/fromEvent';
 
 export class AppComponent {
 
+  selectedValue: string;
+
+  States = [
+    {value: 'Open', viewValue: 'Open'},
+    {value: 'Close', viewValue: 'Close'}
+  ];
+
+  Titles = [
+    {value: 'MdSort', viewValue: 'MdSort'},
+    {value: 'Sizing icon buttons', viewValue: 'Sizing icon buttons'}
+  ];
+
   displayedColumns = ['number', 'state', 'title'];
   exampleDatabase: ExampleHttpDatabase | null;
   dataSource: ExampleDataSource | null;
+
+  dropdata = [];
+  Observer:any
   
   @ViewChild(MdPaginator) paginator: MdPaginator;
-  @ViewChild('filter') filter: ElementRef;
+  @ViewChild('filter') filterInput: ElementRef;
+  @ViewChild('selectstate') selectstate: ElementRef;
   @ViewChild(MdSort) sort: MdSort;
 
   constructor(http: Http) {
-    this.exampleDatabase = new ExampleHttpDatabase(http);
+    this.exampleDatabase = new ExampleHttpDatabase(http, this);
     this.dataSource = new ExampleDataSource(this.exampleDatabase, this.paginator, this.sort);
   }
 
   ngOnInit() {
+
     this.dataSource = new ExampleDataSource(this.exampleDatabase, this.paginator, this.sort);
-    Observable.fromEvent(this.filter.nativeElement, 'keyup')
+
+    Observable.fromEvent(this.filterInput.nativeElement, 'keyup')
         .debounceTime(150)
         .distinctUntilChanged()
         .subscribe(() => {
           if (!this.dataSource) { return; }
-          this.dataSource.filter = this.filter.nativeElement.value;
+          this.dataSource.filter = this.filterInput.nativeElement.value;
         });
+
   }
 
+  mostrardatos($ele){
+    this.dataSource._filterChange.next($ele.value)
+    this.dataSource.allData.next($ele.source.ariaLabel);
+  }
 }
 
 export interface MyGithubIssue {
@@ -54,14 +78,13 @@ export interface MyGithubIssue {
 
 /** An example database that the data source uses to retrieve data for the table. */
 export class ExampleHttpDatabase {
-  private issuesUrl = 'https://api.github.com/repos/angular/material2/issues';  // URL to web API
+  
+  private issuesUrl = 'http://localhost:4200/assets/data.json';  // URL to web API
 
   getRepoIssues(): Observable<MyGithubIssue[]> {
     return this.http.get(this.issuesUrl).map(this.extractData)
                     
   }
-
-
   
   extractData(result: Response): MyGithubIssue[] {
     return result.json().map(issue => {
@@ -76,10 +99,11 @@ export class ExampleHttpDatabase {
   dataChange: BehaviorSubject<MyGithubIssue[]> = new BehaviorSubject<MyGithubIssue[]>([]);
   get data(): MyGithubIssue[] { return this.dataChange.value; }
   
-  constructor(private http: Http) {
+  constructor(private http: Http, private _appComponent: AppComponent) {
     this.getRepoIssues()
             .subscribe(data => this.dataChange.next(data));
   }
+
 }
 
 /**
@@ -89,10 +113,16 @@ export class ExampleHttpDatabase {
  * the underlying data. Instead, it only needs to take the data and send the table exactly what
  * should be rendered.
  */
+
+ 
 export class ExampleDataSource extends DataSource<MyGithubIssue> {
-   _filterChange = new BehaviorSubject('');
+
+  allData = <BehaviorSubject<MyGithubIssue[]>> new BehaviorSubject(new Array<MyGithubIssue>());
+
+  _filterChange = new BehaviorSubject('');
   get filter(): string { return this._filterChange.value; }
   set filter(filter: string) { this._filterChange.next(filter); }
+
 
   filteredData: MyGithubIssue[] = [];
   renderedData: MyGithubIssue[] = [];
@@ -105,36 +135,45 @@ export class ExampleDataSource extends DataSource<MyGithubIssue> {
   connect(): Observable<MyGithubIssue[]> {
     const displayDataChanges = [
       this._exampleDatabase.dataChange,
+      this.allData,
       this._filterChange,
       this._sort.mdSortChange,
-      this._paginator.page,
+      this._paginator.page
     ];
-    
 
     return Observable.merge(...displayDataChanges).map(() => {
+    
+        let searchStr = this.allData.value.toString();
+        let searchStr2: String;
 
-      this.filteredData  = this._exampleDatabase.data.slice().filter((item: MyGithubIssue) => {
-        let searchStr = (item.number + item.title).toLowerCase();
-        return searchStr.indexOf(this.filter.toLowerCase()) != -1;
+        this.filteredData  = this._exampleDatabase.data.slice().filter((item: MyGithubIssue) => {
+
+        if(searchStr === 'state'){
+          searchStr2 = (item.state).toLowerCase();
+        } else {
+          searchStr2 = (item.title).toLowerCase();
+        }
+        
+        console.log(searchStr)
+        
+        return searchStr2.indexOf(this.filter.toLowerCase()) != -1;
       });
 
       // Sort filtered data
-      const sortedData = this.getSortedData(this.filteredData.slice());
+      const sortedData = this.getSortedData(this.filteredData.slice()) // this.droppeddata.slice();
 
       // Grab the page's slice of data.
       const startIndex = this._paginator.pageIndex * this._paginator.pageSize;
-      this.renderedData = sortedData.splice(startIndex, this._paginator.pageSize);
+      this.renderedData = sortedData.splice(startIndex, this._paginator.pageSize)
       return this.renderedData;
     });
-
-    //return this._exampleDatabase.getRepoIssues();
+    
   }
 
   disconnect() {}
 
    /** Returns a sorted copy of the database data. */
   getSortedData(data: MyGithubIssue[]): MyGithubIssue[] {
-    //const data = this._exampleDatabase.data.slice();
     if (!this._sort.active || this._sort.direction == '') { return data; }
 
     return data.sort((a, b) => {
@@ -143,6 +182,7 @@ export class ExampleDataSource extends DataSource<MyGithubIssue> {
 
       switch (this._sort.active) {
         case 'number': [propertyA, propertyB] = [a.number, b.number]; break;
+        case 'state': [propertyA, propertyB] = [a.state, b.state]; break;
       }
 
       let valueA = isNaN(+propertyA) ? propertyA : +propertyA;
